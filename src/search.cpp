@@ -45,7 +45,19 @@
 #include "tt.h"
 #include "uci.h"
 
+
+
 namespace Stockfish {
+
+#ifdef USE_LIVEBOOK
+#define CURL_STATICLIB
+    extern "C"
+    {
+#include <curl/curl.h>
+    }
+#undef min
+#undef max
+#endif
 
 namespace Search {
 
@@ -169,10 +181,64 @@ namespace {
 
 /// Search::init() is called at startup to initialize various lookup tables
 
+#ifdef USE_LIVEBOOK
+    CURL *g_cURL;
+    std::string g_szRecv;
+    std::string g_livebookURL = "http://www.chessdb.cn/cdb.php";
+    int g_inBook;
+    int livebook_depth_count = 0;
+    int max_book_depth;
+
+    size_t cURL_WriteFunc(void *contents, size_t size, size_t nmemb, std::string *s)
+    {
+        size_t newLength = size * nmemb;
+        try
+        {
+            s->append((char *)contents, newLength);
+        }
+        catch (std::bad_alloc &)
+        {
+            // handle memory problem
+            return 0;
+        }
+        return newLength;
+    }
+    void Search::setLiveBookURL(const std::string &newURL)
+    {
+        g_livebookURL = newURL;
+    }
+    void Search::setLiveBookTimeout(size_t newTimeoutMS)
+    {
+        curl_easy_setopt(g_cURL, CURLOPT_TIMEOUT_MS, newTimeoutMS);
+    }
+    void Search::set_livebook_retry(int retry)
+    {
+        g_inBook = retry;
+    }
+    void Search::set_livebook_depth(int book_depth)
+    {
+        max_book_depth = book_depth;
+    }
+#endif
+// livebook end
+
 void Search::init() {
 
   for (int i = 1; i < MAX_MOVES; ++i)
       Reductions[i] = int((20.57 + std::log(Threads.size()) / 2) * std::log(i));
+
+// livebook begin
+#ifdef USE_LIVEBOOK
+      curl_global_init(CURL_GLOBAL_DEFAULT);
+      g_cURL = curl_easy_init();
+      curl_easy_setopt(g_cURL, CURLOPT_TIMEOUT_MS, 1000L);
+      curl_easy_setopt(g_cURL, CURLOPT_WRITEFUNCTION, cURL_WriteFunc);
+      curl_easy_setopt(g_cURL, CURLOPT_WRITEDATA, &g_szRecv);
+      set_livebook_retry((int)Options["Live Book Retry"]);
+      set_livebook_depth((int)Options["Live Book Depth"]);
+#endif
+// livebook end
+  
 }
 
 
@@ -182,6 +248,12 @@ void Search::clear() {
 
   Threads.main()->wait_for_search_finished();
 
+  // livebook begin
+#ifdef USE_LIVEBOOK
+   set_livebook_retry((int)Options["Live Book Retry"]);
+   set_livebook_depth((int)Options["Live Book Depth"]);
+#endif
+// livebook end
   Time.availableNodes = 0;
   TT.clear();
   Threads.clear();
@@ -216,8 +288,51 @@ void MainThread::search() {
   }
   else
   {
-      Threads.start_searching(); // start non-main threads
-      Thread::search();          // main thread start searching
+      Move bookMove = MOVE_NONE;
+    #ifdef USE_LIVEBOOK
+      if (Options["Live Book"] && g_inBook && !Limits.infinite && !Limits.mate)
+      {
+                    if (rootPos.game_ply() == 0)
+                        livebook_depth_count = 0;
+                    if (livebook_depth_count < max_book_depth)
+                    {
+          CURLcode res;
+          char *szFen = curl_easy_escape(g_cURL, rootPos.fen().c_str(), 0);
+          std::string szURL = g_livebookURL + "?action=" + (Options["Live Book Diversity"] ? "query" : "querybest") + "&board=" + szFen;
+          curl_free(szFen);
+          curl_easy_setopt(g_cURL, CURLOPT_URL, szURL.c_str());
+          g_szRecv.clear();
+          res = curl_easy_perform(g_cURL);
+          if (res == CURLE_OK)
+          {
+              g_szRecv.erase(std::find(g_szRecv.begin(), g_szRecv.end(), '\0'), g_szRecv.end());
+              if (g_szRecv.find("move:") != std::string::npos)
+              {
+                  std::string tmp = g_szRecv.substr(5);
+                  bookMove = UCI::to_move(rootPos, tmp);
+                                livebook_depth_count++;
+}
+              }
+          }
+          if (bookMove && std::count(rootMoves.begin(), rootMoves.end(), bookMove))
+          {
+              g_inBook = Options["Live Book Retry"];
+
+              for (Thread* th : Threads)
+                  std::swap(th->rootMoves[0], *std::find(th->rootMoves.begin(), th->rootMoves.end(), bookMove));
+          }
+          else
+          {
+              bookMove = MOVE_NONE;
+              g_inBook--;
+          }
+      }
+    #endif
+      if (!bookMove)
+      {
+          Threads.start_searching(); // start non-main threads
+          Thread::search();          // main thread start searching
+      }
   }
 
   // When we reach the maximum depth, we can arrive here without a raise of
@@ -263,6 +378,16 @@ void MainThread::search() {
       std::cout << " ponder " << UCI::move(bestThread->rootMoves[0].pv[1], rootPos.is_chess960());
 
   std::cout << sync_endl;
+#ifdef USE_LIVEBOOK
+  if (!g_inBook && Options["Live Book Contribute"])
+  {
+      char *szFen = curl_easy_escape(g_cURL, rootPos.fen().c_str(), 0);
+      std::string szURL = g_livebookURL + "?action=store" + "&board=" + szFen + "&move=move:" + UCI::move(bestThread->rootMoves[0].pv[0], rootPos.is_chess960());
+      curl_free(szFen);
+      curl_easy_setopt(g_cURL, CURLOPT_URL, szURL.c_str());
+      curl_easy_perform(g_cURL);
+  }
+#endif
 }
 
 
@@ -732,7 +857,7 @@ namespace {
         if (eval == VALUE_NONE)
             ss->staticEval = eval = evaluate(pos);
         else if (PvNode)
-            Eval::NNUE::hint_common_parent_position(pos);
+               Eval::NNUE::hint_common_parent_position(pos);
 
         // ttValue can be used as a better position evaluation (~7 Elo)
         if (    ttValue != VALUE_NONE
@@ -1322,8 +1447,8 @@ moves_loop: // When in check, search starts here
                   assert(depth > 0);
                   alpha = value; // Update alpha! Always alpha < beta
               }
+              }
           }
-      }
 
 
       // If the move is worse than some previously searched move, remember it, to update its stats later
