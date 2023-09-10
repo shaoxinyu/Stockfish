@@ -110,7 +110,24 @@ extern LimitsType Limits;
 void init();
 void clear();
 
+void setLiveBookURL(const std::string &newURL);
+void setLiveBookTimeout(size_t newTimeoutMS);
+
+
+//livebook begin
+#ifdef USE_LIVEBOOK
+void setLiveBookURL(const std::string &newURL);
+void setLiveBookTimeout(size_t newTimeoutMS);
+void set_livebook_retry(int retry);
+void set_livebook_depth(int book_depth);
+#endif
+//livebook end
+
 } // namespace Search
+
+#ifdef USE_LIVEBOOK
+size_t cURL_WriteFunc(void *contents, size_t size, size_t nmemb, std::string *s);
+#endif
 
 } // namespace Stockfish
 
