@@ -44,7 +44,7 @@ UCI::OptionsMap Options; // Global object
 
 namespace UCI {
 
-/// 'On change' actions, triggered by an option's value change
+// 'On change' actions, triggered by an option's value change
 static void on_clear_hash(const Option&) { Search::clear(); }
 static void on_hash_size(const Option& o) { TT.resize(size_t(o)); }
 static void on_logger(const Option& o) { start_logger(o); }
@@ -58,7 +58,7 @@ static void on_live_book_retry(const Option& o) { Search::set_livebook_retry(o);
 static void on_livebook_depth(const Option& o) { Search::set_livebook_depth(o); }
 #endif
 
-/// Our case insensitive less() function as required by UCI protocol
+// Our case insensitive less() function as required by UCI protocol
 bool CaseInsensitiveLess::operator() (const string& s1, const string& s2) const {
 
   return std::lexicographical_compare(s1.begin(), s1.end(), s2.begin(), s2.end(),
@@ -66,7 +66,7 @@ bool CaseInsensitiveLess::operator() (const string& s1, const string& s2) const 
 }
 
 
-/// UCI::init() initializes the UCI options to their hard-coded default values
+// UCI::init() initializes the UCI options to their hard-coded default values
 
 void init(OptionsMap& o) {
 
@@ -104,8 +104,8 @@ void init(OptionsMap& o) {
 }
 
 
-/// operator<<() is used to print all the options default values in chronological
-/// insertion order (the idx field) and in the format defined by the UCI protocol.
+// operator<<() is used to print all the options default values in chronological
+// insertion order (the idx field) and in the format defined by the UCI protocol.
 
 std::ostream& operator<<(std::ostream& os, const OptionsMap& om) {
 
@@ -131,7 +131,7 @@ std::ostream& operator<<(std::ostream& os, const OptionsMap& om) {
 }
 
 
-/// Option class constructors and conversion operators
+// Option class constructors and conversion operators
 
 Option::Option(const char* v, OnChange f) : type("string"), min(0), max(0), on_change(f)
 { defaultValue = currentValue = v; }
@@ -165,7 +165,7 @@ bool Option::operator==(const char* s) const {
 }
 
 
-/// operator<<() inits options and assigns idx in the correct printing order
+// operator<<() inits options and assigns idx in the correct printing order
 
 void Option::operator<<(const Option& o) {
 
@@ -176,9 +176,9 @@ void Option::operator<<(const Option& o) {
 }
 
 
-/// operator=() updates currentValue and triggers on_change() action. It's up to
-/// the GUI to check for option's limits, but we could receive the new value
-/// from the user by console window, so let's check the bounds anyway.
+// operator=() updates currentValue and triggers on_change() action. It's up to
+// the GUI to check for option's limits, but we could receive the new value
+// from the user by console window, so let's check the bounds anyway.
 
 Option& Option::operator=(const string& v) {
 
