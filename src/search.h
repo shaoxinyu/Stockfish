@@ -311,9 +311,6 @@ class Worker {
     friend class Stockfish::ThreadPool;
     friend class SearchManager;
 
-void setLiveBookURL(const std::string &newURL);
-void setLiveBookTimeout(size_t newTimeoutMS);
-
 
 //livebook begin
 #ifdef USE_LIVEBOOK
