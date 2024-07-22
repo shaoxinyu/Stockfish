@@ -248,7 +248,7 @@ void Search::Worker::start_searching() {
               if (g_szRecv.find("move:") != std::string::npos)
               {
                   std::string tmp = g_szRecv.substr(5);
-                  bookMove = UCIEngine::move(rootPos.side_to_move(), tmp);
+                  bookMove = UCIEngine::Move(rootPos, tmp);
                                 livebook_depth_count++;
 }
               }
