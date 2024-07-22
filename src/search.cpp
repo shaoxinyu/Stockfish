@@ -227,9 +227,9 @@ void Search::Worker::start_searching() {
     }
     else
     {
-      Move bookMove = MOVE_NONE;
+      Move bookMove = Move::none;
     #ifdef USE_LIVEBOOK
-      if (Options["Live Book"] && g_inBook && !Limits.infinite && !Limits.mate)
+      if (options["Live Book"] && g_inBook && !limits.infinite && !limits.mate)
       {
                     if (rootPos.game_ply() == 0)
                         livebook_depth_count = 0;
@@ -237,7 +237,7 @@ void Search::Worker::start_searching() {
                     {
           CURLcode res;
           char *szFen = curl_easy_escape(g_cURL, rootPos.fen().c_str(), 0);
-          std::string szURL = g_livebookURL + "?action=" + (Options["Live Book Diversity"] ? "query" : "querybest") + "&board=" + szFen;
+          std::string szURL = g_livebookURL + "?action=" + (options["Live Book Diversity"] ? "query" : "querybest") + "&board=" + szFen;
           curl_free(szFen);
           curl_easy_setopt(g_cURL, CURLOPT_URL, szURL.c_str());
           g_szRecv.clear();
@@ -248,21 +248,21 @@ void Search::Worker::start_searching() {
               if (g_szRecv.find("move:") != std::string::npos)
               {
                   std::string tmp = g_szRecv.substr(5);
-                  bookMove = UCI::to_move(rootPos, tmp);
+                  bookMove = UCIEngine::move(rootPos, tmp);
                                 livebook_depth_count++;
 }
               }
           }
           if (bookMove && std::count(rootMoves.begin(), rootMoves.end(), bookMove))
           {
-              g_inBook = Options["Live Book Retry"];
+              g_inBook = options["Live Book Retry"];
 
-              for (Thread* th : Threads)
-                  std::swap(th->rootMoves[0], *std::find(th->rootMoves.begin(), th->rootMoves.end(), bookMove));
+              for (Thread* thisThread : Threads)
+                  std::swap(th->rootMoves[0], *std::find(thisThread->rootMoves.begin(), thisThread->rootMoves.end(), bookMove));
           }
           else
           {
-              bookMove = MOVE_NONE;
+              bookMove = Move::none;
               g_inBook--;
           }
       }
@@ -330,7 +330,7 @@ void Search::Worker::start_searching() {
   if (!g_inBook && Options["Live Book Contribute"])
   {
       char *szFen = curl_easy_escape(g_cURL, rootPos.fen().c_str(), 0);
-      std::string szURL = g_livebookURL + "?action=store" + "&board=" + szFen + "&move=move:" + UCI::move(bestThread->rootMoves[0].pv[0], rootPos.is_chess960());
+      std::string szURL = g_livebookURL + "?action=store" + "&board=" + szFen + "&move=move:" + UCIEngine::move(bestThread->rootMoves[0].pv[0], rootPos.is_chess960());
       curl_free(szFen);
       curl_easy_setopt(g_cURL, CURLOPT_URL, szURL.c_str());
       curl_easy_perform(g_cURL);
