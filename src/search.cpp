@@ -257,7 +257,7 @@ void Search::Worker::start_searching() {
           {
               g_inBook = options["Live Book Retry"];
 
-              for (Thread* thisThread : threads)
+              for (thread* thisThread : threads)
                   std::swap(thisThread->rootMoves[0], *std::find(thisThread->rootMoves.begin(), thisThread->rootMoves.end(), bookMove));
           }
           else
