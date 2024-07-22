@@ -97,6 +97,24 @@ Engine::Engine(std::string path) :
         Tablebases::init(o);
         return std::nullopt;
     });
+
+#ifdef USE_LIVEBOOK
+    options["Live Book"]             << Option(false);
+    options["Live Book URL"]         << Option("http://www.chessdb.cn/cdb.php", [this](const Option&) {
+      Search::setLiveBookURL(o); 
+    });
+    options["Live Book Timeout"]     << Option(5000, 0, 10000, [this](const Option&) {
+      Search::setLiveBookTimeout(o);
+    });
+    options["Live Book Retry"]       << Option(3, 1, 100, [this](const Option&) {
+      Search::set_livebook_retry(o);
+    });
+    options["Live Book Diversity"]   << Option(false);
+    options["Live Book Contribute"]  << Option(false);
+    options["Live Book Depth"]       << Option(100, 1, 100, [this](const Option&) {
+      Search::set_livebook_depth(o);
+    });
+#endif
     options["SyzygyProbeDepth"] << Option(1, 1, 100);
     options["Syzygy50MoveRule"] << Option(true);
     options["SyzygyProbeLimit"] << Option(7, 0, 7);
