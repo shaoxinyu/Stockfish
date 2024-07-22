@@ -641,8 +641,8 @@ void Search::Worker::clear() {
       curl_easy_setopt(g_cURL, CURLOPT_TIMEOUT_MS, 1000L);
       curl_easy_setopt(g_cURL, CURLOPT_WRITEFUNCTION, cURL_WriteFunc);
       curl_easy_setopt(g_cURL, CURLOPT_WRITEDATA, &g_szRecv);
-      set_livebook_retry((int)Options["Live Book Retry"]);
-      set_livebook_depth((int)Options["Live Book Depth"]);
+      set_livebook_retry((int)options["Live Book Retry"]);
+      set_livebook_depth((int)options["Live Book Depth"]);
 #endif
 // livebook end
 
