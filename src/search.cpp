@@ -248,7 +248,7 @@ void Search::Worker::start_searching() {
               if (g_szRecv.find("move:") != std::string::npos)
               {
                   std::string tmp = g_szRecv.substr(5);
-                  bookMove = UCIEngine::move(rootPos, tmp);
+                  bookMove = UCIEngine::move(rootPos.side_to_move(), tmp);
                                 livebook_depth_count++;
 }
               }
@@ -269,7 +269,7 @@ void Search::Worker::start_searching() {
     #endif
       if (!bookMove)
       {
-          Threads.start_searching(); // start non-main threads
+          threads.start_searching(); // start non-main threads
           iterative_deepening();          // main thread start searching
       }
     }
@@ -291,8 +291,8 @@ void Search::Worker::start_searching() {
 
     // livebook begin
 #ifdef USE_LIVEBOOK
-   set_livebook_retry((int)Options["Live Book Retry"]);
-   set_livebook_depth((int)Options["Live Book Depth"]);
+   set_livebook_retry((int)options["Live Book Retry"]);
+   set_livebook_depth((int)options["Live Book Depth"]);
 #endif
 // livebook end
 
