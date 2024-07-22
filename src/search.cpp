@@ -227,7 +227,7 @@ void Search::Worker::start_searching() {
     }
     else
     {
-      Move bookMove = Move::none;
+      Move bookMove = Move::none();
     #ifdef USE_LIVEBOOK
       if (options["Live Book"] && g_inBook && !limits.infinite && !limits.mate)
       {
@@ -257,12 +257,12 @@ void Search::Worker::start_searching() {
           {
               g_inBook = options["Live Book Retry"];
 
-              for (Thread* thisThread : Threads)
-                  std::swap(th->rootMoves[0], *std::find(thisThread->rootMoves.begin(), thisThread->rootMoves.end(), bookMove));
+              for (Thread* thisThread : threads)
+                  std::swap(thisThread->rootMoves[0], *std::find(thisThread->rootMoves.begin(), thisThread->rootMoves.end(), bookMove));
           }
           else
           {
-              bookMove = Move::none;
+              bookMove = Move::none();
               g_inBook--;
           }
       }
@@ -327,7 +327,7 @@ void Search::Worker::start_searching() {
     main_manager()->updates.onBestmove(bestmove, ponder);
 
 #ifdef USE_LIVEBOOK
-  if (!g_inBook && Options["Live Book Contribute"])
+  if (!g_inBook && options["Live Book Contribute"])
   {
       char *szFen = curl_easy_escape(g_cURL, rootPos.fen().c_str(), 0);
       std::string szURL = g_livebookURL + "?action=store" + "&board=" + szFen + "&move=move:" + UCIEngine::move(bestThread->rootMoves[0].pv[0], rootPos.is_chess960());
