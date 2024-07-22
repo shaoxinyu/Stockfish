@@ -114,17 +114,21 @@ Engine::Engine(std::string path) :
     options["Live Book"]             << Option(false);
     options["Live Book URL"]         << Option("http://www.chessdb.cn/cdb.php", [this](const Option&) {
       Search::setLiveBookURL(o); 
+      return std::nullopt;
     });
     options["Live Book Timeout"]     << Option(5000, 0, 10000, [this](const Option&) {
       Search::setLiveBookTimeout(o);
+      return std::nullopt;
     });
     options["Live Book Retry"]       << Option(3, 1, 100, [this](const Option&) {
       Search::set_livebook_retry(o);
+      return std::nullopt;
     });
     options["Live Book Diversity"]   << Option(false);
     options["Live Book Contribute"]  << Option(false);
     options["Live Book Depth"]       << Option(100, 1, 100, [this](const Option&) {
       Search::set_livebook_depth(o);
+      return std::nullopt;
     });
 #endif
 
