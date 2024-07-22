@@ -387,9 +387,18 @@ ifeq ($(MAKELEVEL),0)
        export ENV_LDFLAGS := $(LDFLAGS)
 endif
 
-CXXFLAGS = $(ENV_CXXFLAGS) -Wall -Wcast-qual -fno-exceptions -std=c++17 $(EXTRACXXFLAGS)
+CXXFLAGS = $(ENV_CXXFLAGS) -Wall -Wcast-qual -fexceptions -std=c++17 $(EXTRACXXFLAGS)
 DEPENDFLAGS = $(ENV_DEPENDFLAGS) -std=c++17
 LDFLAGS = $(ENV_LDFLAGS) $(EXTRALDFLAGS)
+
+ifneq ($(OS),Android)
+	CXXFLAGS += -DUSE_LIVEBOOK
+	ifeq ($(target_windows),yes)
+		LDFLAGS += -DUSE_LIVEBOOK -lcurl -lws2_32
+	else
+		LDFLAGS += -DUSE_LIVEBOOK -lcurl	
+	endif
+endif
 
 ifeq ($(COMP),)
 	COMP=gcc
@@ -424,9 +433,6 @@ ifeq ($(COMP),gcc)
 	endif
 endif
 
-ifeq ($(target_windows),yes)
-	LDFLAGS += -static
-endif
 
 ifeq ($(COMP),mingw)
 	comp=mingw
