@@ -140,7 +140,7 @@ Engine::Engine(std::optional<std::string> path) :
   
 #ifdef USE_LIVEBOOK
   
-    options.add("Live Book", Option(true));
+    options.add("Live Book", Option(false));
 
     options.add(  //
       "Live Book URL", Option("http://www.chessdb.cn/cdb.php", [this](const Option& o) {
