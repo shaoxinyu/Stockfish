@@ -165,7 +165,7 @@ Engine::Engine(std::optional<std::string> path) :
     options.add("Live Book Contribute", Option(false));
 
     options.add(  //
-      "Live Book Retry", Option(100, 1, 100, [this](const Option& o) {
+      "Live Book Depth", Option(100, 1, 100, [this](const Option& o) {
           Search::set_livebook_depth(o);
           return std::nullopt;
       }));
