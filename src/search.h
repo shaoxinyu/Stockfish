@@ -353,6 +353,11 @@ class Worker {
     friend class SearchManager;
 };
 
+struct ConthistBonus {
+    int index;
+    int weight;
+};
+
 //livebook begin
 #ifdef USE_LIVEBOOK
 void setLiveBookURL(const std::string &newURL);
@@ -361,12 +366,6 @@ void set_livebook_retry(int retry);
 void set_livebook_depth(int book_depth);
 #endif
 //livebook end
-
-struct ConthistBonus {
-    int index;
-    int weight;
-};
-
 
 }  // namespace Search
 
