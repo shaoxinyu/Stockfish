@@ -147,6 +147,40 @@ Engine::Engine(std::optional<std::string> path) :
           return std::nullopt;
       }));
 
+  #ifdef USE_LIVEBOOK
+  
+    options.add("Live Book", Option(false));
+
+    options.add(  //
+      "Live Book URL", Option("http://www.chessdb.cn/cdb.php", [this](const Option& o) {
+          Search::setLiveBookURL(o); 
+          return std::nullopt;
+      }));
+  
+    options.add(  //
+      "Live Book Timeout", Option(5000, 0, 10000, [this](const Option& o) {
+          Search::setLiveBookTimeout(o);
+          return std::nullopt;
+      }));
+
+    options.add(  //
+      "Live Book Retry", Option(3, 1, 100, [this](const Option& o) {
+          Search::set_livebook_retry(o);
+          return std::nullopt;
+      }));
+
+    options.add("Live Book Diversity", Option(false));
+
+    options.add("Live Book Contribute", Option(false));
+
+    options.add(  //
+      "Live Book Depth", Option(100, 1, 100, [this](const Option& o) {
+          Search::set_livebook_depth(o);
+          return std::nullopt;
+      }));
+    
+#endif
+
     load_networks();
     resize_threads();
 }
